@@ -17,6 +17,8 @@ def get_analysis_run_level_and_hierarchy(client, destination_id):
         hierarchy (dict): containing the run_level and labels for the
             run_label, group, project, subject, session, and
             acquisition.
+    Raises:
+        ValueError: if the destination is not an acquisition.
     """
 
     hierarchy = {
@@ -41,7 +43,10 @@ def get_analysis_run_level_and_hierarchy(client, destination_id):
                 container = client.get(destination.parents[level])
                 hierarchy[f"{level}_label"] = container.label
     else:
-        log.error("The destination_id must reference a valid session container.")
+        raise ValueError(
+            f"Destination {destination_id} is a {destination.container_type}; "
+            f"this gear must run on an {run_level}."
+        )
 
     log.info(f"Gear run level and hierarchy labels: {hierarchy}")
     return hierarchy

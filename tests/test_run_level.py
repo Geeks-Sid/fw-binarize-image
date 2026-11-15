@@ -1,3 +1,4 @@
+import pytest
 from types import SimpleNamespace as NS
 
 from fw_binarize_image.main import run  # noqa: F401  # import must not need a gear config.json
@@ -23,3 +24,8 @@ def test_acquisition_hierarchy_labels():
         "session_label": "ses",
         "acquisition_label": "acq",
     }
+
+
+def test_non_acquisition_destination_is_rejected():
+    with pytest.raises(ValueError, match="must run on an acquisition"):
+        get_analysis_run_level_and_hierarchy(_client("analysis"), "acq-id")
