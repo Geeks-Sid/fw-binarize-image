@@ -3,12 +3,6 @@ FROM python:3.9.7-slim-buster
 ENV FLYWHEEL="/flywheel/v0"
 WORKDIR ${FLYWHEEL}
 
-# install main dependenices
-RUN pip install flywheel_gear_toolkit
-RUN pip install fw_core_client
-RUN pip install flywheel-sdk
-
-
 # copy main files into working directory
 COPY run.py manifest.json requirements.txt $FLYWHEEL/
 COPY fw_binarize_image ${FLYWHEEL}/fw_binarize_image 
