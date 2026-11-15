@@ -1,6 +1,5 @@
 import logging
 import shutil
-import json
 
 from flywheel_gear_toolkit import GearToolkitContext
 from .run_level import get_analysis_run_level_and_hierarchy
@@ -40,20 +39,13 @@ def run(gtk_context: GearToolkitContext):
         log.info(f'Created new acquisition: {acq.id}')
 
     # get the input file
-    CONFIG_FILE_PATH = '/flywheel/v0/config.json'
-    with open(CONFIG_FILE_PATH) as config_file:
-        config = json.load(config_file)
+    im1_file_path = gtk_context.get_input_path("input-file")
 
-    im1_file_path = config['inputs']['input-file']['location']['path'] # input path in the gear container
-
-    print(f'Processing file: {im1_file_path}')
+    log.info(f'Processing file: {im1_file_path}')
 
     out_im = binarize_im(im1_file_path)
 
-    try:
-        out_fn = config['config']['output-filename']
-    except:
-        out_fn = f'{sub_label}_{ses_label}_bin.nii.gz'
+    out_fn = gtk_context.config.get("output-filename") or f'{sub_label}_{ses_label}_bin.nii.gz'
     out_path = f'output/{out_fn}'
     nib.save(out_im, out_path)
 
