@@ -1,6 +1,7 @@
 import logging
 import shutil
 
+import flywheel
 from flywheel_gear_toolkit import GearToolkitContext
 from .run_level import get_analysis_run_level_and_hierarchy
 
@@ -28,15 +29,17 @@ def run(gtk_context: GearToolkitContext):
 
     # get the output acqusition container
     output_acq_label = 'processed'
+    session_path = f'{group_name}/{project_label}/{sub_label}/{ses_label}'
     try:
-        acq = fw.lookup(f'{group_name}/{project_label}/{sub_label}/{ses_label}/{output_acq_label}')
-        acq = acq.reload()
-    except:
+        acq = fw.lookup(f'{session_path}/{output_acq_label}')
+    except flywheel.ApiException as e:
+        if e.status != 404:
+            raise
         # if the acquisition does not exist, create it
-        session = fw.lookup(f'{group_name}/{project_label}/{sub_label}/{ses_label}')
+        session = fw.lookup(session_path)
         acq = session.add_acquisition(label=output_acq_label)
-        acq = acq.reload()
         log.info(f'Created new acquisition: {acq.id}')
+    acq = acq.reload()
 
     # get the input file
     im1_file_path = gtk_context.get_input_path("input-file")

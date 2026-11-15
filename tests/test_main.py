@@ -4,6 +4,7 @@ from types import SimpleNamespace as NS
 import nibabel as nib
 import numpy as np
 import pytest
+from flywheel import ApiException
 
 from fw_binarize_image.main import run
 
@@ -76,3 +77,33 @@ def test_empty_output_filename_falls_back_to_default(env):
     env.ctx.config = {"output-filename": ""}
     run(env.ctx)
     assert env.acq.uploads[0][0] == "sub_ses_bin.nii.gz"
+
+
+def _lookup_with_missing_output(error, session):
+    def lookup(path):
+        if path.endswith("/processed"):
+            raise error
+        return session
+
+    return lookup
+
+
+def test_missing_processed_acquisition_is_created(env):
+    created = FakeAcquisition()
+    session = NS(add_acquisition=lambda label: created if label == "processed" else None)
+    env.ctx.client.lookup = _lookup_with_missing_output(ApiException(status=404), session)
+
+    run(env.ctx)
+
+    assert len(created.uploads) == 1
+
+
+def test_lookup_errors_other_than_not_found_propagate(env):
+    def add_acquisition(label):
+        raise AssertionError("must not create an acquisition on a non-404 error")
+
+    session = NS(add_acquisition=add_acquisition)
+    env.ctx.client.lookup = _lookup_with_missing_output(ApiException(status=500), session)
+
+    with pytest.raises(ApiException):
+        run(env.ctx)
