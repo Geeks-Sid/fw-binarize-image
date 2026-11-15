@@ -14,13 +14,18 @@ class FakeAcquisition:
 
     id = "out-acq-id"
 
-    def __init__(self):
+    def __init__(self, error=None):
         self.uploads = []
+        self.paths = []
+        self.error = error
 
     def reload(self):
         return self
 
     def upload_file(self, file):
+        self.paths.append(file)
+        if self.error:
+            raise self.error
         img = nib.load(file)  # the file must exist and be valid at upload time
         self.uploads.append(
             (os.path.basename(file), img.get_data_dtype(), np.asanyarray(img.dataobj))
@@ -29,8 +34,7 @@ class FakeAcquisition:
 
 @pytest.fixture
 def env(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    (tmp_path / "output").mkdir()  # the gear platform provides ./output
+    monkeypatch.chdir(tmp_path)  # no ./output dir: run() must not depend on one
 
     in_path = str(tmp_path / "sub-01_T1w.nii.gz")
     nib.save(
@@ -107,3 +111,19 @@ def test_lookup_errors_other_than_not_found_propagate(env):
 
     with pytest.raises(ApiException):
         run(env.ctx)
+
+
+def test_temp_output_is_removed_and_cwd_untouched(env):
+    run(env.ctx)
+
+    assert not os.path.exists(env.acq.paths[0])
+    assert not (env.tmp_path / "output").exists()
+
+
+def test_temp_output_is_removed_when_upload_fails(env):
+    env.acq.error = RuntimeError("upload failed")
+
+    with pytest.raises(RuntimeError, match="upload failed"):
+        run(env.ctx)
+
+    assert not os.path.exists(env.acq.paths[0])

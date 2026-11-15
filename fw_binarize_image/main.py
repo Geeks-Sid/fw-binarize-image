@@ -1,5 +1,6 @@
 import logging
-import shutil
+import os
+import tempfile
 
 import flywheel
 from flywheel_gear_toolkit import GearToolkitContext
@@ -49,12 +50,10 @@ def run(gtk_context: GearToolkitContext):
     out_im = binarize_im(im1_file_path)
 
     out_fn = gtk_context.config.get("output-filename") or f'{sub_label}_{ses_label}_bin.nii.gz'
-    out_path = f'output/{out_fn}'
-    nib.save(out_im, out_path)
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        out_path = os.path.join(tmp_dir, out_fn)
+        nib.save(out_im, out_path)
 
-    # upload to acquisition in the same session (the uploaded name is the file basename)
-    acq.upload_file(out_path)
-
-    # remove temp files
-    shutil.rmtree('output', ignore_errors=True)
+        # upload to acquisition in the same session (the uploaded name is the file basename)
+        acq.upload_file(out_path)
     return 0
