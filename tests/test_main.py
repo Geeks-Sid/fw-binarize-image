@@ -9,7 +9,7 @@ from fw_binarize_image.main import run
 
 
 class FakeAcquisition:
-    """Records uploads."""
+    """Records uploads; upload_file is as strict as the SDK's unsigned upload (no `name` kwarg)."""
 
     id = "out-acq-id"
 
@@ -19,7 +19,7 @@ class FakeAcquisition:
     def reload(self):
         return self
 
-    def upload_file(self, file, name=None):
+    def upload_file(self, file):
         img = nib.load(file)  # the file must exist and be valid at upload time
         self.uploads.append(
             (os.path.basename(file), img.get_data_dtype(), np.asanyarray(img.dataobj))

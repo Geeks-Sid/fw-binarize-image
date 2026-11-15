@@ -49,8 +49,8 @@ def run(gtk_context: GearToolkitContext):
     out_path = f'output/{out_fn}'
     nib.save(out_im, out_path)
 
-    # upload to acquisition in the same session
-    acq.upload_file(out_path, name=out_fn)
+    # upload to acquisition in the same session (the uploaded name is the file basename)
+    acq.upload_file(out_path)
 
     # remove temp files
     shutil.rmtree('output', ignore_errors=True)
