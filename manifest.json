@@ -21,7 +21,12 @@
     "input-file": {
       "base": "file",
       "description": "Input image.",
-      "optional": false
+      "optional": false,
+      "type": {
+        "enum": [
+          "nifti"
+        ]
+      }
     },
     "api-key": {
       "base": "api-key",
@@ -30,7 +35,7 @@
   },
   "config": {
     "output-filename": {
-      "description": "Output file name.",
+      "description": "Output file name (.nii or .nii.gz). Default: <input name>_bin.nii.gz.",
       "type": "string"
     },
     "debug": {
